@@ -45,13 +45,22 @@ token={{ wavefront_api_token }}
 ephemeral=false
 
 #Comma separated list of ports to listen on for Wavefront formatted data
-pushListenerPorts={{ proxy_port }}
+pushListenerPorts={{ wavefront_proxy_port }}
+
+{% if wavefront_proxy_opentsdb_ports|default(False) %}
 #Comma separated list of ports to listen on for OpenTSDB formatted data
-opentsdbPorts={{ opentsdb_port }}
+opentsdbPorts={{ wavefront_proxy_opentsdb_ports }}
+{% endif %}
+
+{% if wavefront_proxy_json_ports|default(False) %}
 #Comma separated list of ports to listen on for HTTP JSON formatted data
-#jsonListenerPorts=3878
+jsonListenerPorts="{{ wavefront_proxy_json_ports }}"
+{% endif %}
+
+{% if wavefront_proxy_writeHttpJson_ports|default(False) %}
 #Comma separate list of ports to listen on for HTTP collectd write_http data
-#writeHttpJsonListenerPorts=4878
+writeHttpJsonListenerPorts="{{ wavefront_proxy_writeHttpJson_ports }}"
+{% endif %}
 
 # Number of threads that flush data to the server. If not defined in wavefront.conf it defaults to the
 # number of processors (min 4). Setting this value too large will result in sending batches that are
@@ -133,6 +142,7 @@ buffer=/var/spool/{{ wavefront_proxy_pkg }}/buffer
 ## For exponential backoff when retry threads are throttled, the base (a in a^b) in seconds.  Default 2.0
 #retryBackoffBaseSeconds=2.0
 
+{% if http_proxy_enabled|default(False) %}
 ## The following settings are used to connect to Wavefront servers through a HTTP proxy:
 #proxyHost=localhost
 #proxyPort=8080
@@ -146,6 +156,7 @@ buffer=/var/spool/{{ wavefront_proxy_pkg }}/buffer
 #httpConnectTimeout=5000
 ## HTTP request timeout (in milliseconds). Default: 20s (20000)
 #httpRequestTimeout=20000
+{% endif %}
 
 ## Path to the optional config file with preprocessor rules (advanced regEx replacements and whitelist/blacklists)
 #preprocessorConfigFile={{ wavefront_config_dir }}/preprocessor_rules.yaml
@@ -160,54 +171,56 @@ buffer=/var/spool/{{ wavefront_proxy_pkg }}/buffer
 ## Before using any of these settings, reach out to Wavefront Support to ensure your account is enabled for native Histogram
 ## support.
 
+{% if wavefront_proxy_histogram_enabled|default(False) %}
 ## Wavefront format, minute aggregation:
 ## Comma-separated list of ports to listen on.
-#histogramMinsListenerPorts=5000,5001
+histogramMinsListenerPorts={{ histogramMinsListenerPorts }}
 ## Number of accumulators per minute port
-#histogramMinuteAccumulators=2
+histogramMinuteAccumulators={{ histogramMinuteAccumulators }}
 ## Time-to-live in seconds for a minute granularity accumulation on the proxy (before the intermediary is shipped to WF).
-# histogramMinuteFlushSecs=70
+histogramMinuteFlushSecs={{ histogramMinuteFlushSecs }}
 
 ## Wavefront format, hour aggregation:
 ## Comma-separated list of ports to listen on.
-#histogramHoursListenerPorts==6000,6001
+histogramHoursListenerPorts={{ histogramHoursListenerPorts }}
 ## Number of accumulators per hour port
-#histogramHourAccumulators=2
+histogramHourAccumulators={{ histogramHourAccumulators }}
 ## Time-to-live in seconds for an hour granularity accumulation on the proxy (before the intermediary is shipped to WF).
-#histogramHourFlushSecs=4200
+histogramHourFlushSecs={{ histogramHourFlushSecs }}
 
 ## Wavefront format, day aggregation:
 ## Comma-separated list of ports to listen on.
-#histogramDaysListenerPorts==7000,7001
+histogramDaysListenerPorts={{ histogramDaysListenerPorts }}
 ## Number of accumulators per day port
-#histogramDayAccumulators=2
+histogramDayAccumulators={{ histogramDayAccumulators }}
 ## Time-to-live in seconds for a day granularity accumulation on the proxy (before the intermediary is shipped to WF).
-#histogramDayFlushSecs=18000
+histogramDayFlushSecs={{ histogramDayFlushSecs }}
 
 ## Distribution format:
 ## Comma-separated list of ports to listen on.
-#histogramDistListenerPorts==8000,8001
+histogramDistListenerPorts={{ histogramDistListenerPorts }}
 ## Number of accumulators per distribution port
-#histogramDistAccumulators=2
+histogramDistAccumulators={{ histogramDistAccumulators }}
 ## Time-to-live in seconds for a distribution granularity accumulation on the proxy (before the intermediary is shipped
 ## to WF).
-#histogramDistFlushSecs=70
+histogramDistFlushSecs={{ histogramDistFlushSecs }}
 
 ## Accumulation parameters
 ## Bounds the number of centroids per histogram. Must be in [20;1000]
-#histogramCompression = 100
+histogramCompression = 100
 ## Directory for persistent agent state, must be writable.
-#histogramStateDirectory="/var/tmp"
+histogramStateDirectory="/var/tmp"
 ## Interval to write-back accumulation changes to disk in millis
-#histogramAccumulatorResolveInterval = 100
+histogramAccumulatorResolveInterval = 100
 ## Expected upper bound of concurrent accumulations, ~ #timeseries * #parallel reporting bins
-#histogramAccumulatorSize=100000
+histogramAccumulatorSize=100000
 ## Average number of bytes in a [UTF-8] encoded histogram key. ~metric, source and tags concatenation.
-#avgHistogramKeyBytes=50
+avgHistogramKeyBytes=50
 ## Average number of bytes in a encoded distribution/accumulation.
-#avgHistogramDigestBytes=500
+avgHistogramDigestBytes=500
 ## Whether to persist received histogram messages to disk. WARNING only disable this, if loss of unprocessed sample data
 ## on agent shutdown is acceptable.
-#persistMessages=true
+persistMessages=true
 ## Whether to persist accumulation state. WARNING any unflushed histograms will be lost on agent shutdown if disabled
-#persistAccumulator=true
+persistAccumulator=true
+{% endif %}
